@@ -1751,8 +1751,8 @@ Threebox.prototype = {
         else return console.error("Cannot set geographic coordinates of object that does not have an associated GeoGroup. Object must be added to scene with 'addAtCoordinate()'.")
         
         if (options.offset) {
-            lnglat.x += options.offset[0];
-            lnglat.y += options.offset[1];
+            lnglat[0] += options.offset[0];
+            lnglat[1] += options.offset[1];
         }
         if(options.scaleToLatitude) {
             // Scale the model so that its units are interpreted as meters at the given latitude
