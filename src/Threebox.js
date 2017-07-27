@@ -149,7 +149,11 @@ Threebox.prototype = {
         if (obj.userData.isGeoGroup) geoGroup = obj;
         else if (obj.parent && obj.parent.userData.isGeoGroup) geoGroup = obj.parent;
         else return console.error("Cannot set geographic coordinates of object that does not have an associated GeoGroup. Object must be added to scene with 'addAtCoordinate()'.")
-
+        
+        if (options.offset) {
+            lnglat.x += options.offset[0];
+            lnglat.y += options.offset[1];
+        }
         if(options.scaleToLatitude) {
             // Scale the model so that its units are interpreted as meters at the given latitude
             var pixelsPerMeter = this.projectedUnitsPerMeter(lnglat[1]);
@@ -199,7 +203,7 @@ Threebox.prototype = {
     setupDefaultLights: function() {
         this.scene.add( new THREE.AmbientLight( 0xCCCCCC ) );
 
-        var sunlight = new THREE.DirectionalLight(0xffffff, 2.0);
+        var sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
         // sunlight.position.set(0,800,1000);
         sunlight.position.set(10, 15, 30);
         sunlight.matrixWorldNeedsUpdate = true;
