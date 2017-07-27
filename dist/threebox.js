@@ -1788,11 +1788,20 @@ Threebox.prototype = {
         this.world.remove(obj);
     },
 
+    setSpotLight: function(target) {
+        var spotlight = new THREE.SpotLight(0xfce4ec, 2, 0, Math.PI / 4)
+        spotlight.target = target;
+        spotlight.position.set(10, 15, 30);
+        spotlight.matrixWorldNeedsUpdate = true;
+        this.world.add(spotlight);
+    },
+
     setupDefaultLights: function() {
         this.scene.add( new THREE.AmbientLight( 0xCCCCCC ) );
 
-        var sunlight = new THREE.DirectionalLight(0xffffff, 1.0);
-        sunlight.position.set(0,800,1000);
+        var sunlight = new THREE.DirectionalLight(0xffffff, 2.0);
+        // sunlight.position.set(0,800,1000);
+        sunlight.position.set(10, 15, 30);
         sunlight.matrixWorldNeedsUpdate = true;
         this.world.add(sunlight);
         //this.world.add(sunlight.target);
