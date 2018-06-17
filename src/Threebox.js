@@ -177,7 +177,7 @@ Threebox.prototype = {
         obj.coordinates = lnglat;
 
         if (options.callback !== undefined) {
-            this.renderCallback = callback;
+            this.renderCallback = options.callback;
         }
 
         return obj;
