@@ -5,11 +5,16 @@ var utils = require("./Utils/Utils.js");
 //var AnimationManager = require("./Animation/AnimationManager.js");
 var SymbolLayer3D = require("./Layers/SymbolLayer3D.js");
 
-function Threebox(map){
+function Threebox(map, options){
     this.map = map;
 
     // Set up a THREE.js scene
-    this.renderer = new THREE.WebGLRenderer( { alpha: true, antialias:true} );
+    var ctxOptions = {
+        alpha: true,
+        antialias:true
+    };
+    Object.assign(ctxOptions, options);
+    this.renderer = new THREE.WebGLRenderer(ctxOptions);
     this.renderer.setSize( this.map.transform.width, this.map.transform.height );
     this.renderer.shadowMap.enabled = true;
 
@@ -26,6 +31,7 @@ function Threebox(map){
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 0.000001, 5000000000);
     this.layers = [];
+    this.renderCallback = null;
 
     // The CameraSync object will keep the Mapbox and THREE.js camera movements in sync.
     // It requires a world group to scale as we zoom in. Rotation is handled in the camera's
@@ -48,6 +54,11 @@ Threebox.prototype = {
 
         // Render the scene
         this.renderer.render( this.scene, this.camera );
+
+        if (this.renderCallback) {
+            this.renderCallback();
+            this.renderCallback = null;
+        }
 
         // Run this again next frame
         var thisthis = this;
@@ -123,7 +134,7 @@ Threebox.prototype = {
 
         return obj;
     },
-    moveToCoordinate: function(obj, lnglat, options) {
+    moveToCoordinate: function(obj, lnglat, options, callback) {
         /** Place the given object on the map, centered around the provided longitude and latitude
             The object's internal coordinates are assumed to be in meter-offset format, meaning
             1 unit represents 1 meter distance away from the provided coordinate.
@@ -164,6 +175,8 @@ Threebox.prototype = {
 
         geoGroup.position.copy(this.projectToWorld(lnglat));
         obj.coordinates = lnglat;
+
+        this.renderCallback = callback;
 
         return obj;
     },
