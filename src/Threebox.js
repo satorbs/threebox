@@ -134,7 +134,7 @@ Threebox.prototype = {
 
         return obj;
     },
-    moveToCoordinate: function(obj, lnglat, options, callback) {
+    moveToCoordinate: function(obj, lnglat, options) {
         /** Place the given object on the map, centered around the provided longitude and latitude
             The object's internal coordinates are assumed to be in meter-offset format, meaning
             1 unit represents 1 meter distance away from the provided coordinate.
@@ -176,7 +176,9 @@ Threebox.prototype = {
         geoGroup.position.copy(this.projectToWorld(lnglat));
         obj.coordinates = lnglat;
 
-        this.renderCallback = callback;
+        if (options.callback !== undefined) {
+            this.renderCallback = callback;
+        }
 
         return obj;
     },
