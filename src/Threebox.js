@@ -11,7 +11,7 @@ function Threebox(map, options){
     // Set up a THREE.js scene
     var ctxOptions = {
         alpha: true,
-        antialias:true
+        antialias: true
     };
     Object.assign(ctxOptions, options);
     this.renderer = new THREE.WebGLRenderer(ctxOptions);
@@ -21,7 +21,7 @@ function Threebox(map, options){
     this.map._container.appendChild( this.renderer.domElement );
     this.renderer.domElement.style["position"] = "relative";
     this.renderer.domElement.style["pointer-events"] = "none";
-    this.renderer.domElement.style["z-index"] = 1000;
+    this.renderer.domElement.style["z-index"] = (options.zIndex) ? options.zIndex : 1000;
     //this.renderer.domElement.style["transform"] = "scale(1,-1)";
 
     var _this = this;
