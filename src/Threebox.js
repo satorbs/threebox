@@ -32,7 +32,7 @@ function Threebox(map, options){
 
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 0.000001, 5000000000);
+    this.camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 100, 1000000);
     this.layers = [];
     this.renderCallback = null;
 
