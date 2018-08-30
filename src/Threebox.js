@@ -25,7 +25,10 @@ function Threebox(map, options){
     //this.renderer.domElement.style["transform"] = "scale(1,-1)";
 
     var _this = this;
-    this.map.on("resize", function() { _this.renderer.setSize(_this.map.transform.width, _this.map.transform.height); } );
+    this.map.on("resize", function() {
+        _this.renderer.setSize(_this.map.transform.width, _this.map.transform.height);
+        _this.cameraSynchronizer.resize();
+    });
 
 
     this.scene = new THREE.Scene();
@@ -201,6 +204,10 @@ Threebox.prototype = {
         for(var i = 0; i < this.layers.length; i++) {
             if (this.layer.id === id) return layer;
         }
+    },
+
+    toCameraMatrix(pitch, angle) {
+        return this.cameraSynchronizer.calcCameraMatrix(pitch, angle);
     },
 
     remove: function(obj) {

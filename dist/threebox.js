@@ -8,6 +8,8 @@ var Threebox = require('../Threebox.js');
 var utils = require("../Utils/Utils.js");
 var ThreeboxConstants = require("../constants.js");
 
+const FOV = 0.6435011087932844;
+
 function CameraSync(map, camera, world) {
     this.map = map;
     this.camera = camera;
@@ -19,6 +21,7 @@ function CameraSync(map, camera, world) {
     this.world = world || new THREE.Group();
     this.world.position.x = this.world.position.y = ThreeboxConstants.WORLD_SIZE/2
     this.world.matrixAutoUpdate = false;
+    this.resize();
 
     // Listen for move events from the map and update the Three.js camera
     var _this = this;
@@ -34,33 +37,22 @@ CameraSync.prototype = {
         }
 
         // Build a projection matrix, paralleling the code found in Mapbox GL JS
-        const fov = 0.6435011087932844;
-        var cameraToCenterDistance = 0.5 / Math.tan(fov / 2) * this.map.transform.height;
-        const halfFov = fov / 2;
+        const halfFov = FOV / 2;
         const groundAngle = Math.PI / 2 + this.map.transform._pitch;
-        const topHalfSurfaceDistance = Math.sin(halfFov) * cameraToCenterDistance / Math.sin(Math.PI - groundAngle - halfFov);
+        const topHalfSurfaceDistance = Math.sin(halfFov) * this.cameraToCenterDistance / Math.sin(Math.PI - groundAngle - halfFov);
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance = Math.cos(Math.PI / 2 - this.map.transform._pitch) * topHalfSurfaceDistance + cameraToCenterDistance;
+        const furthestDistance = Math.cos(Math.PI / 2 - this.map.transform._pitch) * topHalfSurfaceDistance + this.cameraToCenterDistance;
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const farZ = furthestDistance * 1.01;
 
-        this.camera.projectionMatrix = utils.makePerspectiveMatrix(fov, this.map.transform.width / this.map.transform.height, 1, farZ);
+        this.camera.projectionMatrix = utils.makePerspectiveMatrix(FOV, this.map.transform.width / this.map.transform.height, 1, farZ);
         
-
-        var cameraWorldMatrix = new THREE.Matrix4();
-        var cameraTranslateZ = new THREE.Matrix4().makeTranslation(0,0,cameraToCenterDistance);
-        var cameraRotateX = new THREE.Matrix4().makeRotationX(this.map.transform._pitch);
-        var cameraRotateZ = new THREE.Matrix4().makeRotationZ(this.map.transform.angle);
 
         // Unlike the Mapbox GL JS camera, separate camera translation and rotation out into its world matrix
         // If this is applied directly to the projection matrix, it will work OK but break raycasting
-        cameraWorldMatrix
-            .premultiply(cameraTranslateZ)
-            .premultiply(cameraRotateX)
-            .premultiply(cameraRotateZ);            
-
+        var cameraWorldMatrix = this.calcCameraMatrix(this.map.transform._pitch, this.map.transform.angle);
         this.camera.matrixWorld.copy(cameraWorldMatrix);
 
 
@@ -84,8 +76,25 @@ CameraSync.prototype = {
 
 
         // utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
-    }
+    },
 
+    resize() {
+        this.cameraToCenterDistance = 0.5 / Math.tan(FOV / 2) * this.map.transform.height;
+    },
+
+    calcCameraMatrix(pitch, angle) {
+        const _pitch = pitch || this.map.transform._pitch
+        const _angle = angle || this.map.transform.angle
+
+        var cameraTranslateZ = new THREE.Matrix4().makeTranslation(0, 0, this.cameraToCenterDistance);
+        var cameraRotateX = new THREE.Matrix4().makeRotationX(_pitch);
+        var cameraRotateZ = new THREE.Matrix4().makeRotationZ(_angle);
+
+        return new THREE.Matrix4()
+            .premultiply(cameraTranslateZ)
+            .premultiply(cameraRotateX)
+            .premultiply(cameraRotateZ);
+    }
 }
 
 module.exports = exports = CameraSync;
@@ -1605,27 +1614,36 @@ var utils = require("./Utils/Utils.js");
 //var AnimationManager = require("./Animation/AnimationManager.js");
 var SymbolLayer3D = require("./Layers/SymbolLayer3D.js");
 
-function Threebox(map){
+function Threebox(map, options){
     this.map = map;
 
     // Set up a THREE.js scene
-    this.renderer = new THREE.WebGLRenderer( { alpha: true, antialias:true} );
+    var ctxOptions = {
+        alpha: true,
+        antialias: true
+    };
+    Object.assign(ctxOptions, options);
+    this.renderer = new THREE.WebGLRenderer(ctxOptions);
     this.renderer.setSize( this.map.transform.width, this.map.transform.height );
     this.renderer.shadowMap.enabled = true;
 
     this.map._container.appendChild( this.renderer.domElement );
     this.renderer.domElement.style["position"] = "relative";
     this.renderer.domElement.style["pointer-events"] = "none";
-    this.renderer.domElement.style["z-index"] = 1000;
+    this.renderer.domElement.style["z-index"] = (options.zIndex) ? options.zIndex : 1000;
     //this.renderer.domElement.style["transform"] = "scale(1,-1)";
 
     var _this = this;
-    this.map.on("resize", function() { _this.renderer.setSize(_this.map.transform.width, _this.map.transform.height); } );
+    this.map.on("resize", function() {
+        _this.renderer.setSize(_this.map.transform.width, _this.map.transform.height);
+        _this.cameraSynchronizer.resize();
+    });
 
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 0.000001, 5000000000);
     this.layers = [];
+    this.renderCallback = null;
 
     // The CameraSync object will keep the Mapbox and THREE.js camera movements in sync.
     // It requires a world group to scale as we zoom in. Rotation is handled in the camera's
@@ -1648,6 +1666,11 @@ Threebox.prototype = {
 
         // Render the scene
         this.renderer.render( this.scene, this.camera );
+
+        if (this.renderCallback) {
+            this.renderCallback();
+            this.renderCallback = null;
+        }
 
         // Run this again next frame
         var thisthis = this;
@@ -1765,6 +1788,10 @@ Threebox.prototype = {
         geoGroup.position.copy(this.projectToWorld(lnglat));
         obj.coordinates = lnglat;
 
+        if (options.callback !== undefined) {
+            this.renderCallback = options.callback;
+        }
+
         return obj;
     },
 
@@ -1786,6 +1813,10 @@ Threebox.prototype = {
         for(var i = 0; i < this.layers.length; i++) {
             if (this.layer.id === id) return layer;
         }
+    },
+
+    toCameraMatrix(pitch, angle) {
+        return this.cameraSynchronizer.calcCameraMatrix(pitch, angle);
     },
 
     remove: function(obj) {
