@@ -78,8 +78,8 @@ CameraSync.prototype = {
     },
 
     calcCameraMatrix(pitch, angle) {
-        const _pitch = pitch || this.map.transform._pitch
-        const _angle = angle || this.map.transform.angle
+        const _pitch = (pitch === undefined) ? this.map.transform._pitch : pitch
+        const _angle = (angle === undefined) ? this.map.transform.angle : angle
 
         var cameraTranslateZ = new THREE.Matrix4().makeTranslation(0, 0, this.cameraToCenterDistance);
         var cameraRotateX = new THREE.Matrix4().makeRotationX(_pitch);
