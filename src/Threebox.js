@@ -217,6 +217,7 @@ Threebox.prototype = {
     setSpotLight: function(target) {
         var spotlight = new THREE.SpotLight(0xfce4ec, 2, 0, Math.PI / 4)
         spotlight.target = target;
+        spotlight.castShadow = true;
         spotlight.position.set(10, 15, 30);
         spotlight.matrixWorldNeedsUpdate = true;
         this.world.add(spotlight);
@@ -227,6 +228,7 @@ Threebox.prototype = {
 
         var sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
         // sunlight.position.set(0,800,1000);
+        sunlight.castShadow = true;
         sunlight.position.set(10, 15, 30);
         sunlight.matrixWorldNeedsUpdate = true;
         this.world.add(sunlight);
