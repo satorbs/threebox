@@ -1823,8 +1823,8 @@ Threebox.prototype = {
         this.world.remove(obj);
     },
 
-    setSpotLight: function(target) {
-        var spotlight = new THREE.SpotLight(0xfce4ec, 2, 0, Math.PI / 4)
+    setSpotLight: function(target, color) {
+        var spotlight = new THREE.SpotLight(color, 2, 1, Math.PI / 4)
         spotlight.target = target;
         spotlight.castShadow = true;
         spotlight.position.set(10, 15, 30);
