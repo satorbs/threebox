@@ -159,10 +159,8 @@ Threebox.prototype = {
         var scale = options.preScale;
 
         // Figure out if this object is a geoGroup and should be positioned and scaled directly, or if its parent
-        var geoGroup;
-        if (obj.userData.isGeoGroup) geoGroup = obj;
-        else if (obj.parent && obj.parent.userData.isGeoGroup) geoGroup = obj.parent;
-        else return console.error("Cannot set geographic coordinates of object that does not have an associated GeoGroup. Object must be added to scene with 'addAtCoordinate()'.")
+        var geoGroup = this.getGeoGroup(obj);
+        if (!geoGroup) return;
         
         if (options.offset) {
             lnglat[0] += options.offset[0];
@@ -184,6 +182,19 @@ Threebox.prototype = {
         }
 
         return obj;
+    },
+
+    getGeoGroup: function(obj) {
+        var geoGroup = null;
+        if (obj.userData.isGeoGroup) geoGroup = obj;
+        else if (this._isContainedGeoGroup(obj)) geoGroup = obj.parent;
+        else console.error("Cannot set geographic coordinates of object that does not have an associated GeoGroup. Object must be added to scene with 'addAtCoordinate()'.");
+
+        return geoGroup;
+    },
+
+    _isContainedGeoGroup: function(obj) {
+        return obj.parent && obj.parent.userData.isGeoGroup;
     },
 
     addGeoreferencedMesh: function(mesh, options) {
@@ -211,7 +222,7 @@ Threebox.prototype = {
     },
 
     remove: function(obj) {
-        this.world.remove(obj);
+        this.world.remove(this.getGeoGroup(obj));
     },
 
     setSpotLight: function(target, color) {
