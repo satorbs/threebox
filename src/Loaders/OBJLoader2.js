@@ -6,6 +6,9 @@
 'use strict';
 
 const THREE = require('../three64.js');
+const MTLLoader = require('./MTLLoader');
+const LoaderSupport = require('./LoaderSupport.js');
+const LoaderUtils = require('./LoaderUtils');
 
 /**
  * Use this class to load OBJ data from files or to parse OBJ data from an arraybuffer
@@ -17,7 +20,7 @@ const THREE = require('../three64.js');
 const OBJLoader2 = function ( manager ) {
 	console.info( 'Using OBJLoader2 version: ' + OBJLoader2.OBJLOADER2_VERSION );
 
-	this.manager = THREE.LoaderSupport.Validator.verifyInput( manager, THREE.DefaultLoadingManager );
+	this.manager = LoaderSupport.Validator.verifyInput( manager, THREE.DefaultLoadingManager );
 	this.logging = {
 		enabled: true,
 		debug: false
@@ -33,9 +36,9 @@ const OBJLoader2 = function ( manager ) {
 	this.useOAsMesh = false;
 	this.loaderRootNode = new THREE.Group();
 
-	this.meshBuilder = new THREE.LoaderSupport.MeshBuilder();
-	this.callbacks = new THREE.LoaderSupport.Callbacks();
-	this.workerSupport = new THREE.LoaderSupport.WorkerSupport();
+	this.meshBuilder = new LoaderSupport.MeshBuilder();
+	this.callbacks = new LoaderSupport.Callbacks();
+	this.workerSupport = new LoaderSupport.WorkerSupport();
 	this.terminateWorkerOnLoad = true;
 };
 
@@ -63,7 +66,7 @@ OBJLoader2.prototype = {
 	 * @param {string} modelName
 	 */
 	setModelName: function ( modelName ) {
-		this.modelName = THREE.LoaderSupport.Validator.verifyInput( modelName, this.modelName );
+		this.modelName = LoaderSupport.Validator.verifyInput( modelName, this.modelName );
 	},
 
 	/**
@@ -72,7 +75,7 @@ OBJLoader2.prototype = {
 	 * @param {string} path URL
 	 */
 	setPath: function ( path ) {
-		this.path = THREE.LoaderSupport.Validator.verifyInput( path, this.path );
+		this.path = LoaderSupport.Validator.verifyInput( path, this.path );
 	},
 
 	/**
@@ -80,7 +83,7 @@ OBJLoader2.prototype = {
 	 * @param {string} resourcePath
 	 */
 	setResourcePath: function ( resourcePath ) {
-		this.resourcePath = THREE.LoaderSupport.Validator.verifyInput( resourcePath, this.resourcePath );
+		this.resourcePath = LoaderSupport.Validator.verifyInput( resourcePath, this.resourcePath );
 	},
 
 	/**
@@ -89,7 +92,7 @@ OBJLoader2.prototype = {
 	 * @param {THREE.Object3D} streamMeshesTo Object already attached to scenegraph where new meshes will be attached to
 	 */
 	setStreamMeshesTo: function ( streamMeshesTo ) {
-		this.loaderRootNode = THREE.LoaderSupport.Validator.verifyInput( streamMeshesTo, this.loaderRootNode );
+		this.loaderRootNode = LoaderSupport.Validator.verifyInput( streamMeshesTo, this.loaderRootNode );
 	},
 
 	/**
@@ -138,11 +141,11 @@ OBJLoader2.prototype = {
 	},
 
 	_setCallbacks: function ( callbacks ) {
-		if ( THREE.LoaderSupport.Validator.isValid( callbacks.onProgress ) ) this.callbacks.setCallbackOnProgress( callbacks.onProgress );
-		if ( THREE.LoaderSupport.Validator.isValid( callbacks.onReportError ) ) this.callbacks.setCallbackOnReportError( callbacks.onReportError );
-		if ( THREE.LoaderSupport.Validator.isValid( callbacks.onMeshAlter ) ) this.callbacks.setCallbackOnMeshAlter( callbacks.onMeshAlter );
-		if ( THREE.LoaderSupport.Validator.isValid( callbacks.onLoad ) ) this.callbacks.setCallbackOnLoad( callbacks.onLoad );
-		if ( THREE.LoaderSupport.Validator.isValid( callbacks.onLoadMaterials ) ) this.callbacks.setCallbackOnLoadMaterials( callbacks.onLoadMaterials );
+		if ( LoaderSupport.Validator.isValid( callbacks.onProgress ) ) this.callbacks.setCallbackOnProgress( callbacks.onProgress );
+		if ( LoaderSupport.Validator.isValid( callbacks.onReportError ) ) this.callbacks.setCallbackOnReportError( callbacks.onReportError );
+		if ( LoaderSupport.Validator.isValid( callbacks.onMeshAlter ) ) this.callbacks.setCallbackOnMeshAlter( callbacks.onMeshAlter );
+		if ( LoaderSupport.Validator.isValid( callbacks.onLoad ) ) this.callbacks.setCallbackOnLoad( callbacks.onLoad );
+		if ( LoaderSupport.Validator.isValid( callbacks.onLoadMaterials ) ) this.callbacks.setCallbackOnLoadMaterials( callbacks.onLoadMaterials );
 
 		this.meshBuilder._setCallbacks( this.callbacks );
 	},
@@ -156,7 +159,7 @@ OBJLoader2.prototype = {
 	 * @param {number} numericalValue Numerical value describing the progress
 	 */
 	onProgress: function ( type, text, numericalValue ) {
-		var content = THREE.LoaderSupport.Validator.isValid( text ) ? text: '';
+		var content = LoaderSupport.Validator.isValid( text ) ? text: '';
 		var event = {
 			detail: {
 				type: type,
@@ -167,7 +170,7 @@ OBJLoader2.prototype = {
 			}
 		};
 
-		if ( THREE.LoaderSupport.Validator.isValid( this.callbacks.onProgress ) ) this.callbacks.onProgress( event );
+		if ( LoaderSupport.Validator.isValid( this.callbacks.onProgress ) ) this.callbacks.onProgress( event );
 
 		if ( this.logging.enabled && this.logging.debug ) console.debug( content );
 	},
@@ -185,7 +188,7 @@ OBJLoader2.prototype = {
 	},
 
 	_throwError: function ( errorMessage ) {
-		if ( THREE.LoaderSupport.Validator.isValid( this.callbacks.onReportError ) )  {
+		if ( LoaderSupport.Validator.isValid( this.callbacks.onReportError ) )  {
 
 			this.callbacks.onReportError( errorMessage );
 
@@ -207,20 +210,20 @@ OBJLoader2.prototype = {
 	 * @param {boolean} [useAsync] If true, uses async loading with worker, if false loads data synchronously.
 	 */
 	load: function ( url, onLoad, onProgress, onError, onMeshAlter, useAsync ) {
-		var resource = new THREE.LoaderSupport.ResourceDescriptor( url, 'OBJ' );
+		var resource = new LoaderSupport.ResourceDescriptor( url, 'OBJ' );
 		this._loadObj( resource, onLoad, onProgress, onError, onMeshAlter, useAsync );
 	},
 
 	_loadObj: function ( resource, onLoad, onProgress, onError, onMeshAlter, useAsync ) {
 		var scope = this;
-		if ( ! THREE.LoaderSupport.Validator.isValid( onError ) ) {
+		if ( ! LoaderSupport.Validator.isValid( onError ) ) {
 			onError = function ( event ) {
 				scope._onError( event );
 			}
 		}
 
 		// fast-fail
-		if ( ! THREE.LoaderSupport.Validator.isValid( resource ) ) onError( 'An invalid ResourceDescriptor was provided. Unable to continue!' );
+		if ( ! LoaderSupport.Validator.isValid( resource ) ) onError( 'An invalid ResourceDescriptor was provided. Unable to continue!' );
 		var fileLoaderOnLoad = function ( content ) {
 
 			resource.content = content;
@@ -230,7 +233,7 @@ OBJLoader2.prototype = {
 
 			} else {
 
-				var callbacks = new THREE.LoaderSupport.Callbacks();
+				var callbacks = new LoaderSupport.Callbacks();
 				callbacks.setCallbackOnMeshAlter( onMeshAlter );
 				scope._setCallbacks( callbacks );
 				onLoad(
@@ -249,13 +252,13 @@ OBJLoader2.prototype = {
 		this.setResourcePath( resource.resourcePath );
 
 		// fast-fail
-		if ( ! THREE.LoaderSupport.Validator.isValid( resource.url ) || THREE.LoaderSupport.Validator.isValid( resource.content ) ) {
+		if ( ! LoaderSupport.Validator.isValid( resource.url ) || LoaderSupport.Validator.isValid( resource.content ) ) {
 
-			fileLoaderOnLoad( THREE.LoaderSupport.Validator.isValid( resource.content ) ? resource.content : null );
+			fileLoaderOnLoad( LoaderSupport.Validator.isValid( resource.content ) ? resource.content : null );
 
 		} else {
 
-			if ( ! THREE.LoaderSupport.Validator.isValid( onProgress ) ) {
+			if ( ! LoaderSupport.Validator.isValid( onProgress ) ) {
 				var numericalValueRef = 0;
 				var numericalValue = 0;
 				onProgress = function ( event ) {
@@ -284,8 +287,8 @@ OBJLoader2.prototype = {
 	/**
 	 * Run the loader according the provided instructions.
 	 *
-	 * @param {THREE.LoaderSupport.PrepData} prepData All parameters and resources required for execution
-	 * @param {THREE.LoaderSupport.WorkerSupport} [workerSupportExternal] Use pre-existing WorkerSupport
+	 * @param {LoaderSupport.PrepData} prepData All parameters and resources required for execution
+	 * @param {LoaderSupport.WorkerSupport} [workerSupportExternal] Use pre-existing WorkerSupport
 	 */
 	run: function ( prepData, workerSupportExternal ) {
 		this._applyPrepData( prepData );
@@ -296,7 +299,7 @@ OBJLoader2.prototype = {
 				{ ext: "zip", type: "String", ignore: true }
 			]
 		);
-		if ( THREE.LoaderSupport.Validator.isValid( workerSupportExternal ) ) {
+		if ( LoaderSupport.Validator.isValid( workerSupportExternal ) ) {
 
 			this.terminateWorkerOnLoad = false;
 			this.workerSupport = workerSupportExternal;
@@ -314,7 +317,7 @@ OBJLoader2.prototype = {
 	},
 
 	_applyPrepData: function ( prepData ) {
-		if ( THREE.LoaderSupport.Validator.isValid( prepData ) ) {
+		if ( LoaderSupport.Validator.isValid( prepData ) ) {
 
 			this.setLogging( prepData.logging.enabled, prepData.logging.debug );
 			this.setModelName( prepData.modelName );
@@ -337,7 +340,7 @@ OBJLoader2.prototype = {
 	 */
 	parse: function ( content ) {
 		// fast-fail in case of illegal data
-		if ( ! THREE.LoaderSupport.Validator.isValid( content ) ) {
+		if ( ! LoaderSupport.Validator.isValid( content ) ) {
 
 			console.warn( 'Provided content is not a valid ArrayBuffer or String.' );
 			return this.loaderRootNode;
@@ -412,7 +415,7 @@ OBJLoader2.prototype = {
 			if ( measureTime && scope.logging.enabled ) console.timeEnd( 'OBJLoader2 parseAsync: ' + scope.modelName );
 		};
 		// fast-fail in case of illegal data
-		if ( ! THREE.LoaderSupport.Validator.isValid( content ) ) {
+		if ( ! LoaderSupport.Validator.isValid( content ) ) {
 
 			console.warn( 'Provided content is not a valid ArrayBuffer.' );
 			scopedOnLoad()
@@ -439,7 +442,7 @@ OBJLoader2.prototype = {
 			workerCode += '  * This code was constructed by OBJLoader2 buildCode.\n';
 			workerCode += '  */\n\n';
 			workerCode += 'THREE = { LoaderSupport: {}, OBJLoader2: {} };\n\n';
-			workerCode += codeSerializer.serializeObject( 'THREE.LoaderSupport.Validator', THREE.LoaderSupport.Validator );
+			workerCode += codeSerializer.serializeObject( 'LoaderSupport.Validator', LoaderSupport.Validator );
 			workerCode += codeSerializer.serializeClass( 'OBJLoader2.Parser', OBJLoader2.Parser );
 
 			return workerCode;
@@ -492,20 +495,20 @@ OBJLoader2.prototype = {
  	 * @param {Object} [materialOptions] Set material loading options for MTLLoader
 	 */
 	loadMtl: function ( url, content, onLoad, onProgress, onError, crossOrigin, materialOptions ) {
-		var resource = new THREE.LoaderSupport.ResourceDescriptor( url, 'MTL' );
+		var resource = new LoaderSupport.ResourceDescriptor( url, 'MTL' );
 		resource.setContent( content );
 		this._loadMtl( resource, onLoad, onProgress, onError, crossOrigin, materialOptions );
 	},
 
 	_loadMtl: function ( resource, onLoad, onProgress, onError, crossOrigin, materialOptions ) {
-		if ( THREE.MTLLoader === undefined ) console.error( '"THREE.MTLLoader" is not available. "OBJLoader2" requires it for loading MTL files.' );
-		if ( THREE.LoaderSupport.Validator.isValid( resource ) && this.logging.enabled ) console.time( 'Loading MTL: ' + resource.name );
+		if ( MTLLoader === undefined ) console.error( '"MTLLoader" is not available. "OBJLoader2" requires it for loading MTL files.' );
+		if ( LoaderSupport.Validator.isValid( resource ) && this.logging.enabled ) console.time( 'Loading MTL: ' + resource.name );
 
 		var materials = [];
 		var scope = this;
 		var processMaterials = function ( materialCreator ) {
 			var materialCreatorMaterials = [];
-			if ( THREE.LoaderSupport.Validator.isValid( materialCreator ) ) {
+			if ( LoaderSupport.Validator.isValid( materialCreator ) ) {
 
 				materialCreator.preload();
 				materialCreatorMaterials = materialCreator.materials;
@@ -519,22 +522,22 @@ OBJLoader2.prototype = {
 				}
 			}
 
-			if ( THREE.LoaderSupport.Validator.isValid( resource ) && scope.logging.enabled ) console.timeEnd( 'Loading MTL: ' + resource.name );
+			if ( LoaderSupport.Validator.isValid( resource ) && scope.logging.enabled ) console.timeEnd( 'Loading MTL: ' + resource.name );
 			onLoad( materials, materialCreator );
 		};
 
 		// fast-fail
-		if ( ! THREE.LoaderSupport.Validator.isValid( resource ) || ( ! THREE.LoaderSupport.Validator.isValid( resource.content ) && ! THREE.LoaderSupport.Validator.isValid( resource.url ) ) ) {
+		if ( ! LoaderSupport.Validator.isValid( resource ) || ( ! LoaderSupport.Validator.isValid( resource.content ) && ! LoaderSupport.Validator.isValid( resource.url ) ) ) {
 
 			processMaterials();
 
 		} else {
 
-			var mtlLoader = new THREE.MTLLoader( this.manager );
-			crossOrigin = THREE.LoaderSupport.Validator.verifyInput( crossOrigin, 'anonymous' );
+			var mtlLoader = new MTLLoader( this.manager );
+			crossOrigin = LoaderSupport.Validator.verifyInput( crossOrigin, 'anonymous' );
 			mtlLoader.setCrossOrigin( crossOrigin );
 			mtlLoader.setResourcePath( resource.resourcePath || resource.path );
-			if ( THREE.LoaderSupport.Validator.isValid( materialOptions ) ) mtlLoader.setMaterialOptions( materialOptions );
+			if ( LoaderSupport.Validator.isValid( materialOptions ) ) mtlLoader.setMaterialOptions( materialOptions );
 
 			var parseTextWithMtlLoader = function ( content ) {
 				var contentAsText = content;
@@ -542,7 +545,7 @@ OBJLoader2.prototype = {
 
 					if ( content.length > 0 || content.byteLength > 0 ) {
 
-						contentAsText = THREE.LoaderUtils.decodeText( content );
+						contentAsText = LoaderUtils.decodeText( content );
 
 					} else {
 
@@ -553,19 +556,19 @@ OBJLoader2.prototype = {
 				processMaterials( mtlLoader.parse( contentAsText ) );
 			};
 
-			if ( THREE.LoaderSupport.Validator.isValid( resource.content ) ) {
+			if ( LoaderSupport.Validator.isValid( resource.content ) ) {
 
 				parseTextWithMtlLoader( resource.content );
 
-			} else if ( THREE.LoaderSupport.Validator.isValid( resource.url ) ) {
+			} else if ( LoaderSupport.Validator.isValid( resource.url ) ) {
 
 				var fileLoader = new THREE.FileLoader( this.manager );
-				if ( ! THREE.LoaderSupport.Validator.isValid( onError ) ) {
+				if ( ! LoaderSupport.Validator.isValid( onError ) ) {
 					onError = function ( event ) {
 						scope._onError( event );
 					}
 				}
-				if ( ! THREE.LoaderSupport.Validator.isValid( onProgress ) ) {
+				if ( ! LoaderSupport.Validator.isValid( onProgress ) ) {
 					var numericalValueRef = 0;
 					var numericalValue = 0;
 					onProgress = function ( event ) {
@@ -694,12 +697,12 @@ OBJLoader2.Parser.prototype = {
 	},
 
 	setMaterials: function ( materials ) {
-		this.materials = THREE.LoaderSupport.Validator.verifyInput( materials, this.materials );
-		this.materials = THREE.LoaderSupport.Validator.verifyInput( this.materials, {} );
+		this.materials = LoaderSupport.Validator.verifyInput( materials, this.materials );
+		this.materials = LoaderSupport.Validator.verifyInput( this.materials, {} );
 	},
 
 	setCallbackMeshBuilder: function ( callbackMeshBuilder ) {
-		if ( ! THREE.LoaderSupport.Validator.isValid( callbackMeshBuilder ) ) {
+		if ( ! LoaderSupport.Validator.isValid( callbackMeshBuilder ) ) {
 
 			this._throwError( 'Unable to run as no "MeshBuilder" callback is set.' );
 
@@ -1040,7 +1043,7 @@ OBJLoader2.Parser.prototype = {
 		var index = this.rawMesh.activeMtlName + '|' + this.rawMesh.smoothingGroup.normalized;
 		this.rawMesh.subGroupInUse = this.rawMesh.subGroups[ index ];
 
-		if ( ! THREE.LoaderSupport.Validator.isValid( this.rawMesh.subGroupInUse ) ) {
+		if ( ! LoaderSupport.Validator.isValid( this.rawMesh.subGroupInUse ) ) {
 
 			this.rawMesh.subGroupInUse = {
 				index: index,
@@ -1108,7 +1111,7 @@ OBJLoader2.Parser.prototype = {
 
 			var mappingName = faceIndexV + ( faceIndexU ? '_' + faceIndexU : '_n' ) + ( faceIndexN ? '_' + faceIndexN : '_n' );
 			var indicesPointer = this.rawMesh.subGroupInUse.indexMappings[ mappingName ];
-			if ( THREE.LoaderSupport.Validator.isValid( indicesPointer ) ) {
+			if ( LoaderSupport.Validator.isValid( indicesPointer ) ) {
 
 				this.rawMesh.counts.doubleIndicesCount++;
 
@@ -1200,7 +1203,7 @@ OBJLoader2.Parser.prototype = {
 
 	processCompletedMesh: function () {
 		var result = this.finalizeRawMesh();
-		if ( THREE.LoaderSupport.Validator.isValid( result ) ) {
+		if ( LoaderSupport.Validator.isValid( result ) ) {
 
 			if ( this.colors.length > 0 && this.colors.length !== this.vertices.length ) {
 
@@ -1239,7 +1242,7 @@ OBJLoader2.Parser.prototype = {
 		var colorFA = ( result.absoluteColorCount > 0 ) ? new Float32Array( result.absoluteColorCount ) : null;
 		var normalFA = ( result.absoluteNormalCount > 0 ) ? new Float32Array( result.absoluteNormalCount ) : null;
 		var uvFA = ( result.absoluteUvCount > 0 ) ? new Float32Array( result.absoluteUvCount ) : null;
-		var haveVertexColors = THREE.LoaderSupport.Validator.isValid( colorFA );
+		var haveVertexColors = LoaderSupport.Validator.isValid( colorFA );
 
 		var meshOutputGroup;
 		var materialNames = [];
@@ -1281,7 +1284,7 @@ OBJLoader2.Parser.prototype = {
 			material = this.materials[ materialName ];
 
 			// both original and derived names do not lead to an existing material => need to use a default material
-			if ( ! THREE.LoaderSupport.Validator.isValid( materialOrg ) && ! THREE.LoaderSupport.Validator.isValid( material ) ) {
+			if ( ! LoaderSupport.Validator.isValid( materialOrg ) && ! LoaderSupport.Validator.isValid( material ) ) {
 
 				var defaultMaterialName = haveVertexColors ? 'defaultVertexColorMaterial' : 'defaultMaterial';
 				materialOrg = this.materials[ defaultMaterialName ];
@@ -1299,7 +1302,7 @@ OBJLoader2.Parser.prototype = {
 				}
 
 			}
-			if ( ! THREE.LoaderSupport.Validator.isValid( material ) ) {
+			if ( ! LoaderSupport.Validator.isValid( material ) ) {
 
 				var materialCloneInstructions = {
 					materialNameOrg: materialNameOrg,
@@ -1380,7 +1383,7 @@ OBJLoader2.Parser.prototype = {
 			}
 
 			if ( this.logging.enabled && this.logging.debug ) {
-				var materialIndexLine = THREE.LoaderSupport.Validator.isValid( selectedMaterialIndex ) ? '\n\t\tmaterialIndex: ' + selectedMaterialIndex : '';
+				var materialIndexLine = LoaderSupport.Validator.isValid( selectedMaterialIndex ) ? '\n\t\tmaterialIndex: ' + selectedMaterialIndex : '';
 				var createdReport = '\tOutput Object no.: ' + this.outputObjectCount +
 					'\n\t\tgroupName: ' + meshOutputGroup.groupName +
 					'\n\t\tIndex: ' + meshOutputGroup.index +
@@ -1425,10 +1428,10 @@ OBJLoader2.Parser.prototype = {
 				geometryType: this.rawMesh.faceType < 4 ? 0 : ( this.rawMesh.faceType === 6 ) ? 2 : 1
 			},
 			[ vertexFA.buffer ],
-			THREE.LoaderSupport.Validator.isValid( indexUA ) ? [ indexUA.buffer ] : null,
-			THREE.LoaderSupport.Validator.isValid( colorFA ) ? [ colorFA.buffer ] : null,
-			THREE.LoaderSupport.Validator.isValid( normalFA ) ? [ normalFA.buffer ] : null,
-			THREE.LoaderSupport.Validator.isValid( uvFA ) ? [ uvFA.buffer ] : null
+			LoaderSupport.Validator.isValid( indexUA ) ? [ indexUA.buffer ] : null,
+			LoaderSupport.Validator.isValid( colorFA ) ? [ colorFA.buffer ] : null,
+			LoaderSupport.Validator.isValid( normalFA ) ? [ normalFA.buffer ] : null,
+			LoaderSupport.Validator.isValid( uvFA ) ? [ uvFA.buffer ] : null
 		);
 	},
 
