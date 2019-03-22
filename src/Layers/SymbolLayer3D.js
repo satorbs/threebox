@@ -3,6 +3,7 @@ const ThreeboxConstants = require("../constants.js");
 const utils = require("../Utils/Utils.js");
 const ValueGenerator = require("../Utils/ValueGenerator.js");
 const OBJLoader = require("../Loaders/OBJLoader.js");
+const OBJLoader2 = require("../Loaders/OBJLoader2.js");
 const MTLLoader = require("../Loaders/MTLLoader.js");
 
 console.log(THREE);
