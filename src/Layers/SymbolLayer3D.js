@@ -7,6 +7,8 @@ const OBJLoader2 = require("../Loaders/OBJLoader2.js");
 const MTLLoader = require("../Loaders/MTLLoader.js");
 const ConvexGeometry = require('../Geometries/ConvexGeometry');
 const ConvexBufferGeometry = require('../Geometries/ConvexGeometry');
+const QuickHull = require('../Geometries/QuickHull');
+
 
 console.log(THREE);
 

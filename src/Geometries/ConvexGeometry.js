@@ -3,6 +3,7 @@
  */
 
 const THREE = require('../three64.js');
+const QuickHull = require('./QuickHull');
 
 function ConvexGeometry( points ) {
 
@@ -28,14 +29,7 @@ function ConvexBufferGeometry( points ) {
 	var normals = [];
 
 	// execute QuickHull
-
-	if ( THREE.QuickHull === undefined ) {
-
-		console.error( 'THREE.ConvexBufferGeometry: ConvexBufferGeometry relies on THREE.QuickHull' );
-
-	}
-
-	var quickHull = new THREE.QuickHull().setFromPoints( points );
+	var quickHull = new QuickHull().setFromPoints( points );
 
 	// generate vertices and normals
 
