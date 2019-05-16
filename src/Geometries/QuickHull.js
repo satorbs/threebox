@@ -1019,9 +1019,9 @@ Object.assign( Face.prototype, {
 
 			triangle.set( a.point, b.point, c.point );
 
-			triangle.getNormal( this.normal );
-			triangle.getMidpoint( this.midpoint );
-			this.area = triangle.getArea();
+			triangle.normal( this.normal );
+			triangle.midpoint( this.midpoint );
+			this.area = triangle.area();
 
 			this.constant = this.normal.dot( this.midpoint );
 
