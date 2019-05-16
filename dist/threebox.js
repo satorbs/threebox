@@ -2,7 +2,7 @@
 window.Threebox = require('./src/Threebox'),
 window.THREE = require('./src/three64.js')
 
-},{"./src/Threebox":9,"./src/three64.js":13}],2:[function(require,module,exports){
+},{"./src/Threebox":10,"./src/three64.js":14}],2:[function(require,module,exports){
 var THREE = require("../three64.js");
 var Threebox = require('../Threebox.js');
 var utils = require("../Utils/Utils.js");
@@ -98,7 +98,84 @@ CameraSync.prototype = {
 }
 
 module.exports = exports = CameraSync;
-},{"../Threebox.js":9,"../Utils/Utils.js":10,"../constants.js":12,"../three64.js":13}],3:[function(require,module,exports){
+},{"../Threebox.js":10,"../Utils/Utils.js":11,"../constants.js":13,"../three64.js":14}],3:[function(require,module,exports){
+/**
+ * @author Mugen87 / https://github.com/Mugen87
+ */
+
+const THREE = require('../three64.js');
+
+function ConvexGeometry( points ) {
+
+	THREE.Geometry.call( this );
+
+	this.fromBufferGeometry( new ConvexBufferGeometry( points ) );
+	this.mergeVertices();
+
+}
+
+ConvexGeometry.prototype = Object.create( THREE.Geometry.prototype );
+ConvexGeometry.prototype.constructor = ConvexGeometry;
+
+// ConvexBufferGeometry
+
+function ConvexBufferGeometry( points ) {
+
+	THREE.BufferGeometry.call( this );
+
+	// buffers
+
+	var vertices = [];
+	var normals = [];
+
+	// execute QuickHull
+
+	if ( THREE.QuickHull === undefined ) {
+
+		console.error( 'THREE.ConvexBufferGeometry: ConvexBufferGeometry relies on THREE.QuickHull' );
+
+	}
+
+	var quickHull = new THREE.QuickHull().setFromPoints( points );
+
+	// generate vertices and normals
+
+	var faces = quickHull.faces;
+
+	for ( var i = 0; i < faces.length; i ++ ) {
+
+		var face = faces[ i ];
+		var edge = face.edge;
+
+		// we move along a doubly-connected edge list to access all face points (see HalfEdge docs)
+
+		do {
+
+			var point = edge.head().point;
+
+			vertices.push( point.x, point.y, point.z );
+			normals.push( face.normal.x, face.normal.y, face.normal.z );
+
+			edge = edge.next;
+
+		} while ( edge !== face.edge );
+
+	}
+
+	// build geometry
+
+	this.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+	this.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+
+}
+
+ConvexBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
+ConvexBufferGeometry.prototype.constructor = ConvexBufferGeometry;
+
+module.exports = exports = ConvexGeometry;
+module.exports = exports = ConvexBufferGeometry;
+
+},{"../three64.js":14}],4:[function(require,module,exports){
 const THREE = require("../three64.js");    // Modified version to use 64-bit double precision floats for matrix math
 const ThreeboxConstants = require("../constants.js");
 const utils = require("../Utils/Utils.js");
@@ -106,6 +183,8 @@ const ValueGenerator = require("../Utils/ValueGenerator.js");
 const OBJLoader = require("../Loaders/OBJLoader.js");
 const OBJLoader2 = require("../Loaders/OBJLoader2.js");
 const MTLLoader = require("../Loaders/MTLLoader.js");
+const ConvexGeometry = require('../Geometries/ConvexGeometry');
+const ConvexBufferGeometry = require('../Geometries/ConvexGeometry');
 
 console.log(THREE);
 
@@ -315,7 +394,7 @@ SymbolLayer3D.prototype = {
 }
 
 module.exports = exports = SymbolLayer3D;
-},{"../Loaders/MTLLoader.js":6,"../Loaders/OBJLoader.js":7,"../Loaders/OBJLoader2.js":8,"../Utils/Utils.js":10,"../Utils/ValueGenerator.js":11,"../constants.js":12,"../three64.js":13}],4:[function(require,module,exports){
+},{"../Geometries/ConvexGeometry":3,"../Loaders/MTLLoader.js":7,"../Loaders/OBJLoader.js":8,"../Loaders/OBJLoader2.js":9,"../Utils/Utils.js":11,"../Utils/ValueGenerator.js":12,"../constants.js":13,"../three64.js":14}],5:[function(require,module,exports){
 /**
   * @author Kai Salmen / https://kaisalmen.de
   * Development repository: https://github.com/kaisalmen/WWOBJLoader
@@ -2028,7 +2107,7 @@ module.exports = exports = SymbolLayer3D;
  };
  
 module.exports = exports = LoaderSupport;
-},{"../three64.js":13}],5:[function(require,module,exports){
+},{"../three64.js":14}],6:[function(require,module,exports){
 /**
  * @author Don McCurdy / https://www.donmccurdy.com
  */
@@ -2073,7 +2152,7 @@ var LoaderUtils = {
 };
 
 module.exports = exports = LoaderUtils;
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /**
  * Loads a Wavefront .mtl file specifying materials
  *
@@ -2661,7 +2740,7 @@ MTLLoader.MaterialCreator.prototype = {
 };
 
 module.exports = exports = MTLLoader;
-},{"../three64.js":13}],7:[function(require,module,exports){
+},{"../three64.js":14}],8:[function(require,module,exports){
 /**
  * @author mrdoob / http://mrdoob.com/
  */
@@ -3409,7 +3488,7 @@ OBJLoader.prototype = {
 };
 
 module.exports = exports = OBJLoader;
-},{"../three64.js":13}],8:[function(require,module,exports){
+},{"../three64.js":14}],9:[function(require,module,exports){
 /**
   * @author Kai Salmen / https://kaisalmen.de
   * Development repository: https://github.com/kaisalmen/WWOBJLoader
@@ -4863,7 +4942,7 @@ OBJLoader2.Parser.prototype = {
 
 
 module.exports = exports = OBJLoader2;
-},{"../three64.js":13,"./LoaderSupport.js":4,"./LoaderUtils":5,"./MTLLoader":6}],9:[function(require,module,exports){
+},{"../three64.js":14,"./LoaderSupport.js":5,"./LoaderUtils":6,"./MTLLoader":7}],10:[function(require,module,exports){
 var THREE = require("./three64.js");    // Modified version to use 64-bit double precision floats for matrix math
 var ThreeboxConstants = require("./constants.js");
 var CameraSync = require("./Camera/CameraSync.js");
@@ -5130,7 +5209,7 @@ Threebox.prototype = {
 module.exports = exports = Threebox;
 
 
-},{"./Camera/CameraSync.js":2,"./Layers/SymbolLayer3D.js":3,"./Utils/Utils.js":10,"./constants.js":12,"./three64.js":13}],10:[function(require,module,exports){
+},{"./Camera/CameraSync.js":2,"./Layers/SymbolLayer3D.js":4,"./Utils/Utils.js":11,"./constants.js":13,"./three64.js":14}],11:[function(require,module,exports){
 var THREE = require("../three64.js");    // Modified version to use 64-bit double precision floats for matrix math
 
 function prettyPrintMatrix(uglymatrix){
@@ -5187,7 +5266,7 @@ module.exports.prettyPrintMatrix = prettyPrintMatrix;
 module.exports.makePerspectiveMatrix = makePerspectiveMatrix;
 module.exports.radify = radify;
 module.exports.degreeify = degreeify;
-},{"../three64.js":13}],11:[function(require,module,exports){
+},{"../three64.js":14}],12:[function(require,module,exports){
 const ValueGenerator = function(input) {
     if(typeof input === 'object' && input.property !== undefined)    // Value name comes from a property in each item
         return (f => f.properties[input.property]);
@@ -5199,7 +5278,7 @@ const ValueGenerator = function(input) {
 }
 
 module.exports = exports = ValueGenerator;
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 const WORLD_SIZE = 512;
 const MERCATOR_A = 6378137.0;
 
@@ -5212,7 +5291,7 @@ module.exports = exports = {
     EARTH_CIRCUMFERENCE: 40075000, // In meters
 
 }
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :

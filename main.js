@@ -4,5 +4,7 @@ module.exports = exports = {
     OBJLoader: require('./src/Loaders/OBJLoader'),
     OBJLoader2: require('./src/Loaders/OBJLoader2'),
     MTLLoader: require('./src/Loaders/MTLLoader'),
-    SPE: require('./src/Particles/SPE')
+    SPE: require('./src/Particles/SPE'),
+    ConvexGeometry: require('./src/Geometries/ConvexGeometry'),
+    ConvexBufferGeometry: require('./src/Geometries/ConvexGeometry')
 }
