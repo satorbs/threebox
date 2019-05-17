@@ -6,6 +6,5 @@ module.exports = exports = {
     MTLLoader: require('./src/Loaders/MTLLoader'),
     SPE: require('./src/Particles/SPE'),
     ConvexGeometry: require('./src/Geometries/ConvexGeometry'),
-    ConvexBufferGeometry: require('./src/Geometries/ConvexGeometry'),
     QuickHull: require('./src/Geometries/QuickHull')
 }

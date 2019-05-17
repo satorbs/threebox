@@ -65,5 +65,4 @@ function ConvexBufferGeometry( points ) {
 ConvexBufferGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
 ConvexBufferGeometry.prototype.constructor = ConvexBufferGeometry;
 
-module.exports.ConvexGeometry = exports.ConvexGeometry = ConvexGeometry;
-module.exports.ConvexBufferGeometry = exports.ConvexBufferGeometry = ConvexBufferGeometry;
+module.exports = exports = ConvexGeometry;
