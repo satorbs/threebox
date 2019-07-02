@@ -6406,9 +6406,14 @@ Threebox.prototype = {
         if (options === undefined) options = {};
 
         // Figure out if this object is a geoGroup and should be positioned and scaled directly, or if its parent
-        var geoGroup = this.getGeoGroup(obj);
+        const geoGroup = this.getGeoGroup(obj);
         if (!geoGroup) return;
 
+        // Scale the model so that its units are interpreted as meters at the given latitude
+        const pixelsPerMeter = this.projectedUnitsPerMeter(lnglat[1]);
+        const scale = new THREE.Vector3(1, 1, 1).multiplyScalar(pixelsPerMeter);
+
+        geoGroup.scale.copy(scale);
         geoGroup.position.copy(this.projectToWorld(lnglat));
         obj.coordinates = lnglat;
 
