@@ -1,40 +1,29 @@
-var THREE = require("./three64.js");    // Modified version to use 64-bit double precision floats for matrix math
-var Constants = require("./constants.js");
-var CameraSync = require("./Camera/CameraSync.js");
-var utils = require("./Utils/Utils.js");
-var SymbolLayer3D = require("./Layers/SymbolLayer3D.js");
+var THREE = require('./three64.js');    // Modified version to use 64-bit double precision floats for matrix math
+var Constants = require('./constants.js');
+var CameraSync = require('./Camera/CameraSync.js');
+var utils = require('./Utils/Utils.js');
+var SymbolLayer3D = require('./Layers/SymbolLayer3D.js');
 
-function Threebox(map, options){
+function Threebox(map, gl, options) {
     this.map = map;
 
-    // Set up a THREE.js scene
+    // set up a THREE.js environment
     var ctxOptions = {
         alpha: true,
-        antialias: true
+        antialias: true,
+        canvas: map.getCanvas(),
+        context: gl
     };
     Object.assign(ctxOptions, options);
     this.renderer = new THREE.WebGLRenderer(ctxOptions);
-    this.renderer.setSize( this.map.transform.width, this.map.transform.height );
+    this.renderer.setSize(map.transform.width, map.transform.height);
     this.renderer.shadowMap.enabled = true;
-
-    this.map._container.appendChild( this.renderer.domElement );
-    this.renderer.domElement.style["position"] = "relative";
-    this.renderer.domElement.style["pointer-events"] = "none";
-    this.renderer.domElement.style["z-index"] = (options.zIndex) ? options.zIndex : 1000;
-    //this.renderer.domElement.style["transform"] = "scale(1,-1)";
-
-    var _this = this;
-    this.map.on("resize", function() {
-        _this.renderer.setSize(_this.map.transform.width, _this.map.transform.height);
-        _this.cameraSync.setupCamera();
-    });
-
+    this.renderer.autoClear = false;
 
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 28, window.innerWidth / window.innerHeight, 100, 1000000);
-    this.layers = [];
     this.renderCallback = null;
-
+    
     // The CameraSync object will keep the Mapbox and THREE.js camera movements in sync.
     // It requires a world group to scale as we zoom in. Rotation is handled in the camera's
     // projection matrix itself (as is field of view and near/far clipping)
@@ -43,24 +32,28 @@ function Threebox(map, options){
     this.scene.add(this.world);
     this.cameraSync = new CameraSync(this.map, this.camera, this.world);
 
+    this.map.on('resize', () => {
+        this.renderer.setSize(this.map.transform.width, this.map.transform.height);
+        this.cameraSync.setupCamera();
+    });
+
     this.update();
 }
 
 Threebox.prototype = {
     SymbolLayer3D: SymbolLayer3D,
 
-    update: function(timestamp) {
-        // Render the scene
+    update: function() {
+        // render the scene after reset current state
+        this.renderer.resetGLState();
         this.renderer.render(this.scene, this.camera);
+
+        this.map.triggerRepaint();
 
         if (this.renderCallback) {
             this.renderCallback();
             this.renderCallback = null;
         }
-
-        // Run this again next frame
-        var thisthis = this;
-        requestAnimationFrame(function(timestamp) { thisthis.update(timestamp); } );
     },
 
     projectToWorld: function (coords) {
@@ -93,14 +86,8 @@ Threebox.prototype = {
 
         return vertices;
     },
-    projectToScreen: function(coords) {
-        console.log("WARNING: Projecting to screen coordinates is not yet implemented");
-    },
-    unprojectFromScreen: function (pixel) {
-        console.log("WARNING: unproject is not yet implemented");
-    },
+    
     unprojectFromWorld: function (pixel) {
-
         var unprojected = [
             -pixel.x / (Constants.MERCATOR_A * Constants.DEG2RAD * Constants.PROJECTION_WORLD_SIZE),
             2*(Math.atan(Math.exp(pixel.y/(Constants.PROJECTION_WORLD_SIZE*(-Constants.MERCATOR_A))))-Math.PI/4)/Constants.DEG2RAD
@@ -154,36 +141,19 @@ Threebox.prototype = {
         var geoGroup = null;
         if (obj.userData.isGeoGroup) geoGroup = obj;
         else if (this._isContainedGeoGroup(obj)) geoGroup = obj.parent;
-        else console.error("Cannot set geographic coordinates of object that does not have an associated GeoGroup. Object must be added to scene with 'addAtCoordinate()'.");
+        else console.error('Cannot set geographic coordinates of object that does not have an associated GeoGroup. Object must be added to scene with "addAtCoordinate()".');
 
         return geoGroup;
-    },
-
-    _isContainedGeoGroup: function(obj) {
-        return obj.parent && obj.parent.userData.isGeoGroup;
-    },
-
-    addSymbolLayer: function(options) {
-        const layer = new SymbolLayer3D(this, options);
-        this.layers.push(layer);
-
-        return layer;
-    },
-
-    getDataLayer: function(id) {
-        for(var i = 0; i < this.layers.length; i++) {
-            if (this.layer.id === id) return layer;
-        }
     },
 
     toCameraMatrix: function(pitch, angle) {
         return this.cameraSync.calcCameraMatrix(pitch, angle);
     },
-
+    
     remove: function(obj) {
         this.world.remove(this.getGeoGroup(obj));
     },
-
+    
     setSpotLight: function(target, color) {
         var spotlight = new THREE.SpotLight(color, 2, 1, Math.PI / 4)
         spotlight.target = target;
@@ -192,10 +162,10 @@ Threebox.prototype = {
         spotlight.matrixWorldNeedsUpdate = true;
         this.world.add(spotlight);
     },
-
+    
     setupDefaultLights: function() {
         this.scene.add( new THREE.AmbientLight( 0xCCCCCC ) );
-
+        
         var sunlight = new THREE.DirectionalLight(0xffffff, 1.5);
         // sunlight.position.set(0,800,1000);
         sunlight.castShadow = true;
@@ -203,20 +173,25 @@ Threebox.prototype = {
         sunlight.matrixWorldNeedsUpdate = true;
         this.world.add(sunlight);
         //this.world.add(sunlight.target);
-
+        
         // var lights = [];
         // lights[ 0 ] = new THREE.PointLight( 0x999999, 1, 0 );
         // lights[ 1 ] = new THREE.PointLight( 0x999999, 1, 0 );
         // lights[ 2 ] = new THREE.PointLight( 0x999999, 0.2, 0 );
-
+        
         // lights[ 0 ].position.set( 0, 200, 1000 );
         // lights[ 1 ].position.set( 100, 200, 1000 );
         // lights[ 2 ].position.set( -100, -200, 0 );
-
+        
         // //scene.add( lights[ 0 ] );
         // this.scene.add( lights[ 1 ] );
         // this.scene.add( lights[ 2 ] );
         
+    },
+
+    // privates
+    _isContainedGeoGroup: function(obj) {
+        return obj.parent && obj.parent.userData.isGeoGroup;
     }
 }
 

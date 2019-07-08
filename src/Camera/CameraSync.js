@@ -3,8 +3,6 @@ var Threebox = require('../Threebox.js');
 var utils = require("../Utils/Utils.js");
 var Constants = require("../constants.js");
 
-const FOV = 0.6435011087932844;
-
 function CameraSync(map, camera, world) {
     this.map = map;
     this.camera = camera;
