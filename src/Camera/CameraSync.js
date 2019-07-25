@@ -96,10 +96,11 @@ CameraSync.prototype = {
         const _pitch = (pitch === undefined) ? tr._pitch : pitch;
         const _angle = (angle === undefined) ? tr.angle : angle;
         const _trz = (trz === undefined) ? this.state.cameraTranslateZ : trz;
+        
         return new THREE.Matrix4()
             .premultiply(_trz)
             .premultiply(new THREE.Matrix4().makeRotationX(_pitch))
-            .premultiply(new THREE.Matrix4().makeRotationX(_angle));
+            .premultiply(new THREE.Matrix4().makeRotationZ(_angle));
     }
 }
 
