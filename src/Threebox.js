@@ -69,9 +69,7 @@ Threebox.prototype = {
         var height = coords[2] || 0;
         projected.push( height * pixelsPerMeter );
 
-        var result = new THREE.Vector3(projected[0], projected[1], projected[2]);
-
-        return result;
+        return new THREE.Vector3(projected[0], projected[1], projected[2]);
     },
     projectedUnitsPerMeter: function(latitude) {
         return Math.abs(Constants.WORLD_SIZE * (1 / Math.cos(latitude * Constants.DEG2RAD)) / Constants.EARTH_CIRCUMFERENCE);
@@ -107,8 +105,8 @@ Threebox.prototype = {
         geoGroup.userData.isGeoGroup = true;
         geoGroup.add(obj);
         this.world.add(geoGroup);
-        this.moveToCoordinate(obj, lnglat, options);
-        return obj;
+
+        return this.moveToCoordinate(obj, lnglat, options);
     },
 
     moveToCoordinate: function(obj, lnglat, options) {

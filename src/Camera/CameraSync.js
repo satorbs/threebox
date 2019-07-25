@@ -65,7 +65,7 @@ CameraSync.prototype = {
 
         // Unlike the Mapbox GL JS camera, separate camera translation and rotation out into its world matrix
         // If this is applied directly to the projection matrix, it will work OK but break raycasting
-        var cameraWorldMatrix = this.calcCameraMatrix();
+        var cameraWorldMatrix = this.calcCameraMatrix(tr._pitch, tr.angle);
         this.camera.matrixWorld.copy(cameraWorldMatrix);
 
         var zoomPow =  tr.scale * this.state.worldSizeRatio;
@@ -91,14 +91,15 @@ CameraSync.prototype = {
         // utils.prettyPrintMatrix(this.camera.projectionMatrix.elements);
     },
 
-    calcCameraMatrix() {
-        var tr = this.map.transform;
-        var cameraRotateX = new THREE.Matrix4().makeRotationX(tr._pitch);
-        var cameraRotateZ = new THREE.Matrix4().makeRotationZ(tr.angle);
+    calcCameraMatrix(pitch, angle, trz) {
+        const tr = this.map.transform;
+        const _pitch = (pitch === undefined) ? tr._pitch : pitch;
+        const _angle = (angle === undefined) ? tr.angle : angle;
+        const _trz = (trz === undefined) ? this.state.cameraTranslateZ : trz;
         return new THREE.Matrix4()
-            .premultiply(this.state.cameraTranslateZ)
-            .premultiply(cameraRotateX)
-            .premultiply(cameraRotateZ);
+            .premultiply(_trz)
+            .premultiply(new THREE.Matrix4().makeRotationX(_pitch))
+            .premultiply(new THREE.Matrix4().makeRotationX(_angle));
     }
 }
 
