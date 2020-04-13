@@ -15,6 +15,11 @@ function Threebox(map, gl, options) {
         context: gl
     };
     Object.assign(ctxOptions, options);
+    
+    var zIndex = ctxOptions.zIndex;
+    if (zIndex) {
+        ctxOptions.canvas.style.zIndex = zIndex;
+    }
     this.renderer = new THREE.WebGLRenderer(ctxOptions);
     this.renderer.setSize(map.transform.width, map.transform.height);
     this.renderer.shadowMap.enabled = true;
