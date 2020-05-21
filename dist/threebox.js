@@ -6308,20 +6308,16 @@ function Threebox(map, gl, options) {
         this.cameraSync.setupCamera();
     });
 
-    this.update(false);
+    this.update();
 }
 
 Threebox.prototype = {
     SymbolLayer3D: SymbolLayer3D,
 
-    update: function(shouldRepaintMap) {
+    update: function() {
         // render the scene after reset current state
         this.renderer.resetGLState();
         this.renderer.render(this.scene, this.camera);
-
-        if (shouldRepaintMap) {
-            this.map.triggerRepaint();
-        }
 
         if (this.renderCallback) {
             this.renderCallback();
