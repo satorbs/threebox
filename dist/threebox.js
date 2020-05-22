@@ -6325,6 +6325,18 @@ Threebox.prototype = {
         }
     },
 
+    updateAuto: function() {
+        var self = this;
+        this.requestId = requestAnimationFrame(function() {
+            self.map.triggerRepaint();
+            self.updateAuto();
+        })
+    },
+
+    cancelUpdateAuto() {
+        cancelAnimationFrame(this.requestId)
+    },
+
     projectToWorld: function (coords) {
         // Spherical mercator forward projection, re-scaling to WORLD_SIZE
         var projected = [
