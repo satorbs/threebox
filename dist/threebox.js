@@ -41,9 +41,12 @@ CameraSync.prototype = {
         const tr = this.map.transform;
         const halfFov = this.state.fov / 2;
         const cameraToCenterDistance = 0.5 / Math.tan(halfFov) * tr.height;
+        const maxPitch = tr._maxPitch * Math.PI / 180;
+        const acuteAngle = Math.PI / 2 - maxPitch;
 
         this.state.cameraToCenterDistance = cameraToCenterDistance;
         this.state.cameraTranslateZ = new THREE.Matrix4().makeTranslation(0, 0, cameraToCenterDistance);
+        this.state.maxFurthestDistance = cameraToCenterDistance * 0.95 * (Math.cos(acuteAngle) * Math.sin(halfFov) / Math.sin(acuteAngle - halfFov) + 1);
     
         this.updateCamera();
     },
@@ -63,7 +66,7 @@ CameraSync.prototype = {
         const furthestDistance = Math.cos(Math.PI / 2 - tr._pitch) * topHalfSurfaceDistance + this.state.cameraToCenterDistance;
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
-        const farZ = furthestDistance * 1.01;
+        const farZ = Math.min(furthestDistance * 1.01, this.state.maxFurthestDistance);
 
         this.camera.projectionMatrix = utils.makePerspectiveMatrix(this.state.fov, tr.width / tr.height, 1, farZ);
         
