@@ -41,7 +41,7 @@ CameraSync.prototype = {
 
         this.state.cameraToCenterDistance = cameraToCenterDistance;
         this.state.cameraTranslateZ = new THREE.Matrix4().makeTranslation(0, 0, cameraToCenterDistance);
-        this.state.maxFurthestDistance = cameraToCenterDistance * 0.95 * (Math.cos(acuteAngle) * Math.sin(halfFov) / Math.sin(acuteAngle - halfFov) + 1);
+        this.state.maxFurthestDistance = cameraToCenterDistance * 0.95 * (Math.cos(acuteAngle) * Math.sin(halfFov) / Math.sin(Math.max(0.01, Math.min(Math.PI - 0.01, acuteAngle - halfFov))) + 1);
     
         this.updateCamera();
     },
@@ -55,7 +55,7 @@ CameraSync.prototype = {
         const tr = this.map.transform;
         const halfFov = this.state.fov / 2;
         const groundAngle = Math.PI / 2 + tr._pitch;
-        const topHalfSurfaceDistance = Math.sin(halfFov) * this.state.cameraToCenterDistance / Math.sin(Math.PI - groundAngle - halfFov);
+        const topHalfSurfaceDistance = Math.sin(halfFov) * this.state.cameraToCenterDistance / Math.sin(Math.max(0.01, Math.min(Math.PI - 0.01, Math.PI - groundAngle - halfFov)));
 
         // Calculate z distance of the farthest fragment that should be rendered.
         const furthestDistance = Math.cos(Math.PI / 2 - tr._pitch) * topHalfSurfaceDistance + this.state.cameraToCenterDistance;
