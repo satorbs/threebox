@@ -8,7 +8,7 @@ var Threebox = require('../Threebox.js');
 var utils = require("../Utils/Utils.js");
 var Constants = require("../constants.js");
 
-function CameraSync(map, camera, world) {
+function CameraSync(map, camera, world, maxPitch, maxZoom) {
     this.map = map;
     this.camera = camera;
     this.active = true;
@@ -24,7 +24,9 @@ function CameraSync(map, camera, world) {
     this.state = {
         fov: Constants.FOV,
         translateCenter: new THREE.Matrix4().makeTranslation(Constants.WORLD_SIZE/2, -Constants.WORLD_SIZE / 2, 0),
-        worldSizeRatio: Constants.TILE_SIZE / Constants.WORLD_SIZE
+        worldSizeRatio: Constants.TILE_SIZE / Constants.WORLD_SIZE,
+        maxPitch: maxPitch || Constants.MAX_MAP_PITCH,
+        maxZoom: maxZoom || Constants.MAX_MAP_ZOOM
     };
 
     // Listen for move events from the map and update the Three.js camera
@@ -41,8 +43,7 @@ CameraSync.prototype = {
         const tr = this.map.transform;
         const halfFov = this.state.fov / 2;
         const cameraToCenterDistance = 0.5 / Math.tan(halfFov) * tr.height;
-        const maxPitch = tr._maxPitch * Math.PI / 180;
-        const acuteAngle = Math.PI / 2 - maxPitch;
+        const acuteAngle = Math.PI / 2 - this.state.maxPitch;
 
         this.state.cameraToCenterDistance = cameraToCenterDistance;
         this.state.cameraTranslateZ = new THREE.Matrix4().makeTranslation(0, 0, cameraToCenterDistance);
@@ -6304,7 +6305,7 @@ function Threebox(map, gl, options) {
     // It automatically registers to listen for move events on the map so we don't need to do that here
     this.world = new THREE.Group();
     this.scene.add(this.world);
-    this.cameraSync = new CameraSync(this.map, this.camera, this.world);
+    this.cameraSync = new CameraSync(this.map, this.camera, this.world, options.maxPitch, options.maxZoom);
 
     this.map.on('resize', () => {
         this.renderer.setSize(this.map.transform.width, this.map.transform.height);
@@ -6561,7 +6562,9 @@ module.exports = exports = {
     RAD2DEG: 180 / Math.PI,
     EARTH_CIRCUMFERENCE: 40075000, // In meters
     FOV: 0.6435011087932844,
-    TILE_SIZE: 512
+    TILE_SIZE: 512,
+    MAX_MAP_PITCH: 75 * Math.PI / 180,
+    MAX_MAP_ZOOM: 22
 }
 },{}],15:[function(require,module,exports){
 (function (global, factory) {

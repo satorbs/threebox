@@ -35,7 +35,7 @@ function Threebox(map, gl, options) {
     // It automatically registers to listen for move events on the map so we don't need to do that here
     this.world = new THREE.Group();
     this.scene.add(this.world);
-    this.cameraSync = new CameraSync(this.map, this.camera, this.world);
+    this.cameraSync = new CameraSync(this.map, this.camera, this.world, options.maxPitch, options.maxZoom);
 
     this.map.on('resize', () => {
         this.renderer.setSize(this.map.transform.width, this.map.transform.height);

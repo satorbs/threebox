@@ -9,5 +9,7 @@ module.exports = exports = {
     RAD2DEG: 180 / Math.PI,
     EARTH_CIRCUMFERENCE: 40075000, // In meters
     FOV: 0.6435011087932844,
-    TILE_SIZE: 512
+    TILE_SIZE: 512,
+    MAX_MAP_PITCH: 75 * Math.PI / 180,
+    MAX_MAP_ZOOM: 22
 }
