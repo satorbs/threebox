@@ -82,7 +82,8 @@ Threebox.prototype = {
 
         // z dimension
         var height = coords[2] || 0;
-        projected.push( height * pixelsPerMeter );
+        projected.push( height * pixelsPerMeter / Constants.WORLD_SIZE );
+        // projected.push( height * pixelsPerMeter / Constants.WORLD_SIZE );
 
         return new THREE.Vector3(projected[0], projected[1], projected[2]);
     },
@@ -138,6 +139,8 @@ Threebox.prototype = {
         // Scale the model so that its units are interpreted as meters at the given latitude
         const pixelsPerMeter = this.projectedUnitsPerMeter(lnglat[1]);
         const scale = new THREE.Vector3(1, 1, 1).multiplyScalar(pixelsPerMeter);
+
+        // console.log(lnglat[2], this.map.painter.terrain.getAtPoint(mercatorCoord), mercatorCoord.meterInMercatorCoordinateUnits(), pixelsPerMeter / 512);
 
         geoGroup.scale.copy(scale);
         geoGroup.position.copy(this.projectToWorld(lnglat));
@@ -209,4 +212,3 @@ Threebox.prototype = {
 }
 
 module.exports = exports = Threebox;
-

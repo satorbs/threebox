@@ -62,14 +62,20 @@ CameraSync.prototype = {
         const halfFov = this.state.fov / 2;
         const groundAngle = Math.PI / 2 + tr._pitch;
         const topHalfSurfaceDistance = Math.sin(halfFov) * this.state.cameraToCenterDistance / Math.sin(Math.max(0.01, Math.min(Math.PI - 0.01, Math.PI - groundAngle - halfFov)));
+        const pitchAngle = Math.cos(Math.PI / 2 - tr._pitch);
 
         // Calculate z distance of the farthest fragment that should be rendered.
-        const furthestDistance = Math.cos(Math.PI / 2 - tr._pitch) * topHalfSurfaceDistance + this.state.cameraToCenterDistance;
+        const furthestDistance = pitchAngle * topHalfSurfaceDistance + this.state.cameraToCenterDistance;
+
+        // https://github.com/mapbox/mapbox-gl-js/commit/5cf6e5f523611bea61dae155db19a7cb19eb825c#diff-5dddfe9d7b5b4413ee54284bc1f7966d
+        const nz = (tr.height / 50); // min near z as coded by @ansis
+        const nearZ = Math.max(nz / Math.max(pitchAngle ** 2, 0.1), nz); // on changes in the pitch nz could be too low
+        // console.log(tr._pitch * 180 / Math.PI, pitchAngle, nearZ, nz);
 
         // Add a bit extra to avoid precision problems when a fragment's distance is exactly `furthestDistance`
         const farZ = Math.min(furthestDistance * 1.01, this.state.maxFurthestDistance);
 
-        this.camera.projectionMatrix = utils.makePerspectiveMatrix(this.state.fov, tr.width / tr.height, 1, farZ);
+        this.camera.projectionMatrix = utils.makePerspectiveMatrix(this.state.fov, tr.width / tr.height, nearZ, farZ);
         
 
         // Unlike the Mapbox GL JS camera, separate camera translation and rotation out into its world matrix
@@ -6352,7 +6358,8 @@ Threebox.prototype = {
 
         // z dimension
         var height = coords[2] || 0;
-        projected.push( height * pixelsPerMeter );
+        projected.push( height * pixelsPerMeter / Constants.WORLD_SIZE );
+        // projected.push( height * pixelsPerMeter / Constants.WORLD_SIZE );
 
         return new THREE.Vector3(projected[0], projected[1], projected[2]);
     },
@@ -6408,6 +6415,8 @@ Threebox.prototype = {
         // Scale the model so that its units are interpreted as meters at the given latitude
         const pixelsPerMeter = this.projectedUnitsPerMeter(lnglat[1]);
         const scale = new THREE.Vector3(1, 1, 1).multiplyScalar(pixelsPerMeter);
+
+        // console.log(lnglat[2], this.map.painter.terrain.getAtPoint(mercatorCoord), mercatorCoord.meterInMercatorCoordinateUnits(), pixelsPerMeter / 512);
 
         geoGroup.scale.copy(scale);
         geoGroup.position.copy(this.projectToWorld(lnglat));
@@ -6479,8 +6488,6 @@ Threebox.prototype = {
 }
 
 module.exports = exports = Threebox;
-
-
 },{"./Camera/CameraSync.js":2,"./Layers/SymbolLayer3D.js":5,"./Utils/Utils.js":12,"./constants.js":14,"./three64.js":15}],12:[function(require,module,exports){
 var THREE = require("../three64.js");    // Modified version to use 64-bit double precision floats for matrix math
 
